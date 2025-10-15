@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import twilioService from "../service/twilio.service";
+import jwt, { Secret, SignOptions } from "jsonwebtoken";
 
 export const sendVerification = async (req: Request, res: Response) => {
   const { to, username } = req.body;
@@ -27,6 +28,9 @@ export const sendVerification = async (req: Request, res: Response) => {
   }
 };
 
+const JWT_SECRET = process.env.JWT_SECRET!;
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN!;
+
 export const verifyCode = async (req: Request, res: Response) => {
   const { to, code } = req.body;
 
@@ -37,24 +41,43 @@ export const verifyCode = async (req: Request, res: Response) => {
     });
   }
 
-  const result = await twilioService.checkVerify(to, code);
+  try {
+    const result = await twilioService.checkVerify(to, code);
 
-  if (result.success && result.status === "approved") {
-    return res.status(200).json({
-      success: true,
-      status: "approved",
-      message: "Phone number verified successfully",
-    });
-  } else if (result.success && result.status === "pending") {
-    return res.status(200).json({
-      success: false,
-      status: "pending",
-      message: "Code is incorrect or expired",
-    });
-  } else {
+    if (result.status === "approved") {
+      const token = jwt.sign(
+        { phone: to },
+        JWT_SECRET as Secret,
+        {
+          expiresIn: JWT_EXPIRES_IN,
+        } as SignOptions
+      );
+
+      return res.status(200).json({
+        success: true,
+        status: "approved",
+        message: "Phone number verified successfully",
+        token, // send token to client
+      });
+    }
+
+    if (result.status === "pending") {
+      return res.status(200).json({
+        success: false,
+        status: "pending",
+        message: "Code is incorrect or expired",
+      });
+    }
+
     return res.status(400).json({
       success: false,
-      message: result.error,
+      message: "Verification failed. Please try again.",
+    });
+  } catch (error: any) {
+    console.error("❌ Verification error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error during verification.",
     });
   }
 };

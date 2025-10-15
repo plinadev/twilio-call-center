@@ -6,6 +6,7 @@ type ApiResponse<T = unknown> = {
   message: string;
   status?: string;
   data?: T;
+  token?: string;
 };
 
 export const handleLogin = async ({
@@ -46,6 +47,9 @@ export const handleVerify = async ({
       code,
     });
 
+    if (response.data.token) {
+      localStorage.setItem("authToken", response.data.token);
+    }
     return response.data;
   } catch (error: any) {
     console.error("Verification error:", error.response?.data || error.message);

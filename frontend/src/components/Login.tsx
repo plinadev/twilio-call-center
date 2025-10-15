@@ -2,9 +2,12 @@ import React, { useState } from "react";
 import { HiPlus, HiUser } from "react-icons/hi";
 import { handleLogin, handleVerify } from "../services/authService";
 import { isValidCode, isValidName, isValidPhone } from "../utils/validate";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 export default function Login() {
-  const [step, setStep] = useState<"phone" | "verify">("phone");
+  const navigate = useNavigate();
+  const [step, setStep] = useState<"phone" | "verify">("verify");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
@@ -53,7 +56,8 @@ export default function Login() {
       setErrors({});
       const result = await handleVerify({ phone: `+${phone}`, code });
       if (result.status === "approved") {
-        setSuccessMessage("✅ Phone verified successfully!");
+        toast.success("Verification successful");
+        navigate("/");
       } else {
         setErrors({ code: result.message || "Invalid or expired code." });
       }
