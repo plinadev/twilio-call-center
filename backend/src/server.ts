@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import {
   changeCallStatus,
+  enqueueCall,
   receiveNewCall,
   sendVerification,
   verifyCode,
@@ -19,6 +20,7 @@ app.post("/login", sendVerification);
 
 app.post("/verify", verifyCode);
 app.post("/call-new", authMiddleware, receiveNewCall);
+app.post("/call-enqueue", authMiddleware, enqueueCall);
 app.post("/call-status", authMiddleware, changeCallStatus);
 
 app.listen(PORT, () => {

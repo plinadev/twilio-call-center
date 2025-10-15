@@ -72,6 +72,23 @@ export class TwilioService {
       throw error;
     }
   }
+  async enqueueCall() {
+    try {
+      const twiml = new VoiceResponse();
+
+      const say = twiml.say(
+        { voice: "alice" },
+        "All our agents are currently busy. Please hold, we will connect you shortly."
+      );
+
+      twiml.play("https://api.twilio.com/cowbell.mp3");
+
+      return twiml.toString();
+    } catch (error: any) {
+      console.error("❌ Failed to enqueue call:", error.message);
+      throw error;
+    }
+  }
   async changeCallStatus(callSid: string, callStatus: string) {
     try {
       console.log(`📞 Call ${callSid} changed status → ${callStatus}`);

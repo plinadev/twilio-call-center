@@ -97,6 +97,17 @@ export const receiveNewCall = async (req: Request, res: Response) => {
     return res.status(500).send("Internal server error");
   }
 };
+
+export const enqueueCall = async (req: Request, res: Response) => {
+  try {
+    const twiml = await twilioService.enqueueCall();
+    res.type("text/xml").send(twiml);
+  } catch (error: any) {
+    console.error("❌ Error enqueuing call:", error.message);
+    res.status(500).send("Internal server error");
+  }
+};
+
 export const changeCallStatus = async (req: Request, res: Response) => {
   try {
     const { CallSid, CallStatus } = req.body;
