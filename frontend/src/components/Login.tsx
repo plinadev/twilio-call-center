@@ -56,6 +56,7 @@ export default function Login() {
       setErrors({});
       const result = await handleVerify({ phone: `+${phone}`, code });
       if (result.status === "approved") {
+        localStorage.setItem("username", name);
         toast.success("Verification successful");
         navigate("/");
       } else {
