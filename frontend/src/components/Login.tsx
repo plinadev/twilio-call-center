@@ -1,18 +1,9 @@
 import React, { useState } from "react";
 import { HiPlus, HiUser } from "react-icons/hi";
+import { handleLogin, handleVerify } from "../services/authService";
+import { isValidCode, isValidName, isValidPhone } from "../utils/validate";
 
-type LoginProps = {
-  onSubmit?: (data: {
-    name: string;
-    phone: string;
-  }) => Promise<{ status: string } | void>;
-  onVerifyCode?: (data: {
-    phone: string;
-    code: string;
-  }) => Promise<{ status: string } | void>;
-};
-
-export default function Login({ onSubmit, onVerifyCode }: LoginProps) {
+export default function Login() {
   const [step, setStep] = useState<"phone" | "verify">("phone");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -24,15 +15,6 @@ export default function Login({ onSubmit, onVerifyCode }: LoginProps) {
   }>({});
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
-
-  const isValidPhone = (value: string) => {
-    const digits = value.replace(/[^0-9]/g, "");
-    return digits.length >= 8 && digits.length <= 15;
-  };
-
-  const isValidName = (value: string) =>
-    /^[a-zA-Zа-яА-ЯїЇєЄёЁіІ\s'-]{2,30}$/.test(value.trim());
-  const isValidCode = (value: string) => /^[0-9]{4,8}$/.test(value);
 
   const handleSendCode = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -47,9 +29,13 @@ export default function Login({ onSubmit, onVerifyCode }: LoginProps) {
     try {
       setLoading(true);
       setErrors({});
-      onSubmit?.({ name, phone: `+${phone}` });
-      setStep("verify");
-      setSuccessMessage(`A verification code was sent to +${phone}.`);
+      const result = await handleLogin({ name, phone: `+${phone}` });
+      if (result.success) {
+        setStep("verify");
+        setSuccessMessage(`A verification code was sent to +${phone}.`);
+      } else {
+        setErrors({ phone: result.message });
+      }
     } catch (err: any) {
       setErrors({ phone: err?.message || "Something went wrong — try again." });
     } finally {
@@ -65,11 +51,11 @@ export default function Login({ onSubmit, onVerifyCode }: LoginProps) {
     try {
       setLoading(true);
       setErrors({});
-      const res = await onVerifyCode?.({ phone: `+${phone}`, code });
-      if (res && (res as any).status === "approved") {
+      const result = await handleVerify({ phone: `+${phone}`, code });
+      if (result.status === "approved") {
         setSuccessMessage("✅ Phone verified successfully!");
       } else {
-        setErrors({ code: "Invalid or expired code." });
+        setErrors({ code: result.message || "Invalid or expired code." });
       }
     } catch (err: any) {
       setErrors({ code: err?.message || "Verification failed." });
