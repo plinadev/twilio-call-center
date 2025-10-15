@@ -1,3 +1,4 @@
+import VoiceResponse from "twilio/lib/twiml/VoiceResponse";
 import { twilio } from "../config/twilioConfig";
 
 export class TwilioService {
@@ -50,6 +51,35 @@ export class TwilioService {
         success: false,
         error: error.message || "Verification failed",
       };
+    }
+  }
+  async newCall(from: string, to: string) {
+    try {
+      console.log(`📞 Incoming call from ${from} to ${to}`);
+
+      const twiml = new VoiceResponse();
+      twiml.say(
+        {
+          voice: "alice",
+          language: "en-US",
+        },
+        "Thank you for your call. Our representative will contact you shortly."
+      );
+
+      return twiml.toString();
+    } catch (error: any) {
+      console.error("❌ Failed to handle new call:", error.message);
+      throw error;
+    }
+  }
+  async changeCallStatus(callSid: string, callStatus: string) {
+    try {
+      console.log(`📞 Call ${callSid} changed status → ${callStatus}`);
+
+      return { callSid, status: callStatus };
+    } catch (error: any) {
+      console.error("❌ Failed to change call status:", error.message);
+      throw error;
     }
   }
 }

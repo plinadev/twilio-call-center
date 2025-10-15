@@ -81,3 +81,45 @@ export const verifyCode = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const receiveNewCall = async (req: Request, res: Response) => {
+  try {
+    const { from, to } = req.body;
+
+    if (!from || !to) {
+      return res.status(400).send("Missing call information");
+    }
+    const twiml = await twilioService.newCall(from, to);
+    res.type("text/xml");
+    return res.send(twiml);
+  } catch (error: any) {
+    console.error("❌ Error handling new call:", error.message);
+    return res.status(500).send("Internal server error");
+  }
+};
+export const changeCallStatus = async (req: Request, res: Response) => {
+  try {
+    const { CallSid, CallStatus } = req.body;
+
+    if (!CallSid || !CallStatus) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing CallSid or CallStatus",
+      });
+    }
+
+    const result = await twilioService.changeCallStatus(CallSid, CallStatus);
+
+    return res.status(200).json({
+      success: true,
+      message: "Call status updated",
+      data: result,
+    });
+  } catch (error: any) {
+    console.error("❌ Error updating call status:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
